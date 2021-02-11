@@ -24,6 +24,11 @@
         </template>
       </v-data-table>
     </v-card>
+    <v-snackbar v-model="snackbar.show" :timeout="3000">
+      <div class="text-center">
+        {{ snackbar.text }}
+      </div>
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -32,6 +37,7 @@ export default {
   name: "Home",
   data: () => {
     return {
+      snackbar: { show: false, text: "" },
       gapi: null,
       loadingEmails: false,
       emailAddresses: [],
@@ -72,20 +78,31 @@ export default {
         })
         .then(res => {
           this.emailAddresses = this.emailAddresses.concat(
-            res.result.connections
-              .filter(person => {
-                return !!person.emailAddresses;
-              })
-              .reduce((acc, person) => {
-                acc = acc.concat(person.emailAddresses);
-                return acc;
-              }, [])
+            !res.result.connections
+              ? []
+              : res.result.connections
+                  .filter(person => {
+                    return !!person.emailAddresses;
+                  })
+                  .reduce((acc, person) => {
+                    acc = acc.concat(person.emailAddresses);
+                    return acc;
+                  }, [])
           );
           if (res.result.nextPageToken) {
             this.listConnectionEmails(res.result.nextPageToken);
           } else {
             this.loadingEmails = false;
+            if (!this.emailAddresses.length)
+              this.snackbar = { text: "Nenhum contato encontrado", show: true };
           }
+        })
+        .catch(() => {
+          this.loadingEmails = false;
+          this.snackbar = {
+            text: "Erro ao obter lista de contatos",
+            show: true
+          };
         });
     }
   },
