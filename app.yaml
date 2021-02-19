@@ -1,0 +1,10 @@
+runtime: python38
+entrypoint: gunicorn -b :8080 app:app
+
+handlers:
+  - url: /static
+    static_dir: dist/static
+  - url: /.*
+    secure: always
+    redirect_http_response_code: 301
+    script: auto

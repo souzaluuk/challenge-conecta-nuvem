@@ -21,4 +21,5 @@ env/
 package.json
 package-lock.json
 README.md
-!dist/
+public/
+src/

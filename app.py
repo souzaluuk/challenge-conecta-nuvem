@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from os import getenv
+
 import google.auth.exceptions
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
@@ -7,7 +9,6 @@ from dotenv import load_dotenv
 from flask import Flask, redirect, render_template, request, session, url_for
 from flask_cors import CORS
 from googleapiclient.discovery import build
-from os import getenv
 
 load_dotenv()
 
@@ -18,6 +19,7 @@ SCOPES = [
 ]
 API_SERVICE_NAME = 'people'
 API_VERSION = 'v1'
+SCHEME_URL = 'https' if getenv('FLASK_ENV') == 'production' else 'http'
 
 app = Flask(
     __name__,
@@ -28,7 +30,6 @@ app = Flask(
 app.secret_key = getenv('SECRET_KEY')
 cors = CORS(app, resources={
             r'/api/*': {'origins': getenv('CORS_ORIGIN_LIST', '*')}})
-
 
 
 @app.route('/api/emails')
@@ -114,7 +115,8 @@ def login():
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             CLIENT_SECRETS_FILE, scopes=SCOPES)
 
-        flow.redirect_uri = url_for('login_callback', _external=True)
+        flow.redirect_uri = url_for(
+            'login_callback', _external=True)
 
         authorization_url, state = flow.authorization_url(
             access_type='offline',
@@ -133,7 +135,8 @@ def login_callback():
 
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE, scopes=SCOPES, state=state)
-    flow.redirect_uri = url_for('login_callback', _external=True)
+    flow.redirect_uri = url_for(
+        'login_callback', _external=True)
 
     # Use the authorization server's response to fetch the OAuth 2.0 tokens.
     authorization_response = request.url
@@ -154,6 +157,7 @@ def logout():
     if 'credentials' in session:
         del session['credentials']
     return '', 204
+
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
