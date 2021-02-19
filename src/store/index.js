@@ -5,27 +5,29 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    isSignedIn: false,
-    loading: true
+    loading: true,
+    user: null
+  },
+  getters: {
+    isSignedIn: ({ user }) => !!user
   },
   mutations: {
-    updateIsSignedIn(state, isSignedIn) {
-      state.isSignedIn = isSignedIn;
-      state.loading = false;
-    },
-    updateLoading(state, loading) {
+    setLoading(state, loading) {
       state.loading = loading;
+    },
+    setUser(state, user) {
+      state.user = user;
     }
   },
   actions: {
-    login({ commit }) {
-      commit("updateIsSignedIn", true);
+    login({ commit }, user) {
+      commit("setUser", user);
     },
     logout({ commit }) {
-      commit("updateIsSignedIn", false);
+      commit("setUser", null);
     },
     setLoading({ commit }, loading) {
-      commit("updateLoading", loading);
+      commit("setLoading", loading);
     }
   },
   modules: {}

@@ -17,17 +17,19 @@ export default {
   name: "App",
   components: { ToolBar, Loading },
   methods: {
-    setSignedIn(isSignedIn) {
-      if (isSignedIn) {
-        this.$store.dispatch("login");
-        if (this.loginPageIsActive) {
-          this.$router.replace("/");
-        }
-      } else {
-        this.$store.dispatch("logout");
-        if (!this.loginPageIsActive) {
-          this.$router.replace("/login");
-        }
+    setLoading(loading) {
+      this.$store.dispatch("setLoading", loading);
+    },
+    login(user) {
+      this.$store.dispatch("login", user);
+      if (this.loginPageIsActive) {
+        this.$router.replace("/");
+      }
+    },
+    logout() {
+      this.$store.dispatch("logout");
+      if (!this.loginPageIsActive) {
+        this.$router.replace("/login");
       }
     }
   },
@@ -40,10 +42,23 @@ export default {
     }
   },
   mounted() {
-    this.$gapi.getGapiClient().then(gapi => {
-      gapi.auth2.getAuthInstance().isSignedIn.listen(this.setSignedIn);
-      this.setSignedIn(gapi.auth2.getAuthInstance().isSignedIn.get());
-    });
+    this.setLoading(true);
+    this.$axios
+      .post("/api/login")
+      .then(({ data }) => {
+        this.login(data);
+        this.setLoading(false);
+      })
+      .catch(() => {
+        this.logout();
+        this.setLoading(false);
+      });
   }
 };
 </script>
+
+<style>
+html {
+  overflow-y: auto;
+}
+</style>

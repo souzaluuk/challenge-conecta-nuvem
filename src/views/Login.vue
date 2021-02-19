@@ -39,26 +39,11 @@
 <script>
 export default {
   name: "Login",
-  data: () => {
-    return { gapi: null };
-  },
   methods: {
     login() {
-      this.setLoading(true);
-      this.gapi.auth2
-        .getAuthInstance()
-        .signIn()
-        .catch(() => this.setLoading(false));
+      window.location.href = `/api/login?next=${document.location.origin}`;
     },
-    logout() {
-      this.setLoading(true);
-      this.gapi.auth2
-        .getAuthInstance()
-        .signOut()
-        .catch(() => {
-          this.setLoading(false);
-        });
-    },
+    logout() {},
     setLoading(loading) {
       this.$store.dispatch("setLoading", loading);
     }
@@ -70,11 +55,6 @@ export default {
     loading() {
       return this.$store.state.loading;
     }
-  },
-  mounted() {
-    this.$gapi.getGapiClient().then(gapi => {
-      this.gapi = gapi;
-    });
   }
 };
 </script>

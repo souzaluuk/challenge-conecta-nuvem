@@ -38,7 +38,6 @@ export default {
   data: () => {
     return {
       snackbar: { show: false, text: "" },
-      gapi: null,
       loadingEmails: false,
       emailAddresses: [],
       headers: [
@@ -51,11 +50,13 @@ export default {
     items() {
       return !this.loadingEmails
         ? this.emailAddresses.reduce((acc, emailAddress) => {
-            const domain = emailAddress.value.split("@")[1];
+            const domain = emailAddress.split("@")[1];
+
             if (!acc.some(item => domain === item.domain)) {
-              const emails = this.emailAddresses
-                .filter(({ value }) => value.split("@")[1] === domain)
-                .map(({ value }) => value);
+              const emails = this.emailAddresses.filter(
+                value => value.split("@")[1] === domain
+              );
+
               acc.push({
                 domain,
                 emails
@@ -66,53 +67,24 @@ export default {
         : [];
     }
   },
-  methods: {
-    listConnectionEmails(pageToken) {
-      this.loadingEmails = true;
-
-      this.gapi.client.people.people.connections
-        .list({
-          resourceName: "people/me",
-          personFields: "names,emailAddresses",
-          pageToken
-        })
-        .then(res => {
-          this.emailAddresses = this.emailAddresses.concat(
-            !res.result.connections
-              ? []
-              : res.result.connections
-                  .filter(person => {
-                    return !!person.emailAddresses;
-                  })
-                  .reduce((acc, person) => {
-                    acc = acc.concat(person.emailAddresses);
-                    return acc;
-                  }, [])
-          );
-          if (res.result.nextPageToken) {
-            this.listConnectionEmails(res.result.nextPageToken);
-          } else {
-            this.loadingEmails = false;
-            if (!this.emailAddresses.length)
-              this.snackbar = { text: "Nenhum contato encontrado", show: true };
-          }
-        })
-        .catch(() => {
-          this.loadingEmails = false;
-          this.snackbar = {
-            text: "Erro ao obter lista de contatos",
-            show: true
-          };
-        });
-    }
-  },
   mounted() {
-    this.$gapi
-      .getGapiClient()
-      .then(gapi => {
-        this.gapi = gapi;
+    this.loadingEmails = true;
+    this.$axios
+      .get("/api/emails")
+      .then(({ data }) => {
+        this.loadingEmails = false;
+        this.emailAddresses = data.emails;
+        if (!this.emailAddresses.length) {
+          this.snackbar = { text: "Nenhum contato encontrado", show: true };
+        }
       })
-      .then(() => this.listConnectionEmails());
+      .catch(() => {
+        this.loadingEmails = false;
+        this.snackbar = {
+          text: "Erro ao obter lista de contatos",
+          show: true
+        };
+      });
   }
 };
 </script>
